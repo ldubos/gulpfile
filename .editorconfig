@@ -12,8 +12,11 @@ insert_final_newline = true
 indent_style = space
 indent_size = 2
 
-[*.{txt, js}]
+[*.txt]
 indent_style = tab
+tab_width = 4
+
+[*.{js, html}]
 indent_size = 4
 
 [*.{diff, md}]
