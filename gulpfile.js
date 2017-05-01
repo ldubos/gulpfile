@@ -1,13 +1,13 @@
 'use strict';
 
 var browsersync = require('browser-sync').create(),
-    browserify  = require('browserify'),
     gulp        = require('gulp'),
     autoprefixer= require('gulp-autoprefixer'),
     cleancss    = require('gulp-clean-css'),
     concat      = require('gulp-concat'),
     csscomb     = require('gulp-csscomb'),
     csslint     = require('gulp-csslint'),
+    jshint      = require('gulp-jshint'),
     rename      = require('gulp-rename'),
     sass        = require('gulp-sass'),
     sourcemaps  = require('gulp-sourcemaps'),
@@ -88,6 +88,27 @@ var plugins = {
             basename: 'app'
         }
     },
+    scripts: {
+        run: {
+            jshint: true,
+            uglify: true,
+            sourcemaps: true
+        },
+        jshint: {
+            reporter: 'default'
+        },
+        sourcemaps: {
+            options: {},
+            writeOptions: {},
+            writePath: './'
+        },
+        concat: {
+            name: 'app.js'
+        },
+        rename: {
+            basename: 'app'
+        }
+    },
     serve: {
         options: {
             server: paths.dest.root
@@ -129,10 +150,30 @@ gulp.task('style', () => {
 });
 
 /**
+ *  Scripts
+ */
+
+gulp.task('scripts', () => {
+    var $ = plugins.scripts;
+
+    return gulp.src(getExtensions(paths.src.scripts, paths.src.root))
+        .pipe($.run.jshint ? jshint() : noop)
+        .pipe($.run.jshint ? jshint.reporter($.jshint.reporter) : noop)
+        .pipe($.run.sourcemaps ? sourcemaps.init($.sourcemaps.options) : noop)
+        .pipe(concat($.concat.name))
+        .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.scripts.folder))
+        .pipe($.run.uglify ? uglify() : noop)
+        .pipe($.run.uglify ? rename({ suffix: '.min', basename: $.rename.basename }) : noop)
+        .pipe($.run.sourcemaps ? sourcemaps.write($.sourcemaps.writePath, $.sourcemaps.writeOptions) : noop)
+        .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.scripts.folder))
+        .pipe(plugins.browsersync ? browsersync.stream() : noop);
+});
+
+/**
  *  Serve
  */
 
-gulp.task('serve', ['style'], () => {
+gulp.task('serve', ['style', 'scripts'], () => {
     var $ = plugins.serve;
 
     browsersync.init($.options);
@@ -140,5 +181,6 @@ gulp.task('serve', ['style'], () => {
     plugins.browsersync = true;
 
     gulp.watch(getExtensions(paths.dest.style, paths.dest.root), ['style']);
+    gulp.watch(getExtensions(paths.dest.scripts, paths.dest.root), ['scripts']);
     gulp.watch(getExtensions(paths.dest.html, paths.dest.root)).on('change', browsersync.reload);
 });
