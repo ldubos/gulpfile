@@ -1,7 +1,7 @@
 # Gulpfile
 
-2. [Dependencies](#dependencies)
-1. [How to install](#how-to-install)
+1. [Dependencies](#dependencies)
+2. [How to install](#how-to-install)
 3. [How to use](#how-to-use)
 
 ## Dependencies
