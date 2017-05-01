@@ -125,7 +125,11 @@ var plugins = {
     fonts: {},
     serve: {
         options: {
-            server: paths.dest.root
+            server: paths.dest.root,
+            ghostMode: false,
+            logFileChanges: false,
+            reloadOnRestart: true,
+            notify: false
         }
     }
 };
