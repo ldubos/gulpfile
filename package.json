@@ -4,13 +4,13 @@
   "description": "A simple gulpfile template for front works (with : .gitignore, .gitattributes, .editorconfig)",
   "main": "gulpfile.js",
   "scripts": {
-    "build": "gulp",
-    "html": "gulp html",
-    "style": "gulp style",
-    "scripts": "gulp scripts",
-    "images": "gulp images",
-    "fonts": "gulp fonts",
-    "serve": "gulp serve"
+    "build":    "gulp",
+    "html":     "gulp html",
+    "style":    "gulp style",
+    "scripts":  "gulp scripts",
+    "images":   "gulp images",
+    "fonts":    "gulp fonts",
+    "serve":    "gulp serve"
   },
   "repository": {
     "type": "git",
