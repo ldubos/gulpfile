@@ -6,6 +6,7 @@ var browsersync = require('browser-sync').create(),
     cleancss    = require('gulp-clean-css'),
     concat      = require('gulp-concat'),
     csscomb     = require('gulp-csscomb'),
+    imagemin    = require('gulp-imagemin'),
     csslint     = require('gulp-csslint'),
     jshint      = require('gulp-jshint'),
     rename      = require('gulp-rename'),
@@ -25,23 +26,22 @@ var paths = {
         html:       { folder: '.',          extensions: ['*.html', '*.htm']},
         style:      { folder: 'scss',       extensions: ['*.scss', '*.sass', '*.css'] },
         scripts:    { folder: 'scripts',    extensions: ['*.js'] },
-        images:     { folder: 'images',     extensions: ['*.png', '*.jpg', '*.jpeg', '*.gif'] },
-        fonts:      { folder: 'fonts',      extensions: ['*.*'] },
-        svg:        { folder: 'images/svg', extensions: ['*.svg'] }
+        images:     { folder: 'images',     extensions: ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg'] },
+        fonts:      { folder: 'fonts',      extensions: ['*.ttf', '*.eot', '*.otf', '*.woff', '*.woff2'] },
     },
     dest: {
         root:       './dist',
         html:       { folder: '.',          extensions: ['*.html', '*.htm']},
         style:      { folder: 'css',        extensions: ['*.css'] },
         scripts:    { folder: 'js',         extensions: ['*.js'] },
-        images:     { folder: 'images',     extensions: ['*.png', '*.jpg', '*.jpeg', '*.gif'] },
-        fonts:      { folder: 'fonts',      extensions: ['*.*'] },
-        svg:        { folder: 'images/svg', extensions: ['*.svg'] }
+        images:     { folder: 'images',     extensions: ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg'] },
+        fonts:      { folder: 'fonts',      extensions: ['*.ttf', '*.eot', '*.otf', '*.woff', '*.woff2'] },
     }
 };
 
 var plugins = {
     browsersync: false,
+    html: {},
     style: {
         run: {
             sass: true,
@@ -109,6 +109,20 @@ var plugins = {
             basename: 'app'
         }
     },
+    images: {
+        run: {
+            imagemin: true
+        },
+        imagemin: {
+            options: {
+                interlaced: true,
+                progressive: true,
+                optimizationLevel: 5,
+                svgoPlugins: [{ removeViewBox: true }]
+            }
+        }
+    },
+    fonts: {},
     serve: {
         options: {
             server: paths.dest.root
@@ -125,6 +139,17 @@ function getExtensions(path, root) {
         return root + '/' + path.folder + '/**/' + extension;
     });
 };
+
+/**
+ *  HTML
+ */
+
+gulp.task('html', () => {
+    var $ = plugins.html;
+
+    return gulp.src(getExtensions(paths.src.html, paths.src.root))
+        .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.html.folder));
+});
 
 /**
  *  Style
@@ -145,8 +170,8 @@ gulp.task('style', () => {
         .pipe($.run.cleancss && $.run.sass ? rename({ suffix: '.min', basename: $.rename.basename }) : noop)
         .pipe($.run.cleancss && $.run.sass ? cleancss($.cleancss.options, $.cleancss.callback) : noop)
         .pipe($.run.sourcemaps && $.run.sass ? sourcemaps.write($.sourcemaps.writePath, $.sourcemaps.writeOptions) : noop)
-        .pipe($.run.cleancss && $.run.sass ? gulp.dest(paths.dest.root + '/' + paths.dest.style.folder) : noop)
-        .pipe($.run.cleancss && $.run.sass && plugins.browsersync ? browsersync.stream() : noop);
+        .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.style.folder))
+        .pipe(plugins.browsersync ? browsersync.stream() : noop);
 });
 
 /**
@@ -159,28 +184,62 @@ gulp.task('scripts', () => {
     return gulp.src(getExtensions(paths.src.scripts, paths.src.root))
         .pipe($.run.jshint ? jshint() : noop)
         .pipe($.run.jshint ? jshint.reporter($.jshint.reporter) : noop)
-        .pipe($.run.sourcemaps ? sourcemaps.init($.sourcemaps.options) : noop)
+        .pipe($.run.sourcemaps && $.run.uglify ? sourcemaps.init($.sourcemaps.options) : noop)
         .pipe(concat($.concat.name))
         .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.scripts.folder))
         .pipe($.run.uglify ? uglify() : noop)
         .pipe($.run.uglify ? rename({ suffix: '.min', basename: $.rename.basename }) : noop)
-        .pipe($.run.sourcemaps ? sourcemaps.write($.sourcemaps.writePath, $.sourcemaps.writeOptions) : noop)
+        .pipe($.run.sourcemaps && $.run.uglify ? sourcemaps.write($.sourcemaps.writePath, $.sourcemaps.writeOptions) : noop)
         .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.scripts.folder))
         .pipe(plugins.browsersync ? browsersync.stream() : noop);
 });
 
 /**
+ *  Images
+ */
+
+gulp.task('images', () => {
+    var $ = plugins.images;
+
+    return gulp.src(getExtensions(paths.src.images, paths.root))
+        .pipe($.run.imagemin ? imagemin($.imagemin.options) : noop)
+        .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.images.folder))
+        .pipe(plugins.browsersync ? browsersync.stream() : noop);
+});
+
+/**
+ *  Fonts
+ */
+
+gulp.task('fonts', () => {
+    var $ = plugins.fonts;
+
+    return gulp.src(getExtensions(paths.src.fonts, paths.src.root))
+        .pipe(gulp.dest(gulp.dest.root + '/' + paths.dest.fonts.folder))
+        .pipe(plugins.browsersync ? browsersync.stream() : noop);
+});
+
+/**
+ *  Default (build all)
+ */
+
+gulp.task('default', ['html', 'style', 'scripts', 'images', 'fonts']);
+
+/**
  *  Serve
  */
 
-gulp.task('serve', ['style', 'scripts'], () => {
+gulp.task('serve', ['default'], () => {
     var $ = plugins.serve;
 
     browsersync.init($.options);
 
     plugins.browsersync = true;
 
-    gulp.watch(getExtensions(paths.dest.style, paths.dest.root), ['style']);
-    gulp.watch(getExtensions(paths.dest.scripts, paths.dest.root), ['scripts']);
-    gulp.watch(getExtensions(paths.dest.html, paths.dest.root)).on('change', browsersync.reload);
+    gulp.watch(getExtensions(paths.src.html,    paths.src.root), ['html']);
+    gulp.watch(getExtensions(paths.src.style,   paths.src.root), ['style']);
+    gulp.watch(getExtensions(paths.src.scripts, paths.src.root), ['scripts']);
+    gulp.watch(getExtensions(paths.src.images,  paths.src.root), ['images']);
+    gulp.watch(getExtensions(paths.src.fonts,   paths.src.root), ['fonts']);
+    gulp.watch(getExtensions(paths.dest.html,   paths.dest.root)).on('change', browsersync.reload);
 });

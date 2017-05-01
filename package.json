@@ -4,7 +4,12 @@
   "description": "A simple gulpfile template for front works (with : .gitignore, .gitattributes, .editorconfig)",
   "main": "gulpfile.js",
   "scripts": {
+    "build": "gulp",
+    "html": "gulp html",
     "style": "gulp style",
+    "scripts": "gulp scripts",
+    "images": "gulp images",
+    "fonts": "gulp fonts",
     "serve": "gulp serve"
   },
   "repository": {
@@ -31,6 +36,7 @@
     "gulp-concat": "^2.6.1",
     "gulp-csscomb": "^3.0.8",
     "gulp-csslint": "^1.0.0",
+    "gulp-imagemin": "^3.2.0",
     "gulp-jshint": "^2.0.4",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^3.1.0",
