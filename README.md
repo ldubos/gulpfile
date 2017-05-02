@@ -44,7 +44,7 @@ gulp style
 
 #### List of all tasks
 
-* gulp (run all task except serve)
+* gulp (run all tasks except serve)
 * gulp html
 * gulp style
 * gulp scripts
