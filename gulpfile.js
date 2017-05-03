@@ -1,6 +1,7 @@
 'use strict';
 
 var browsersync     = require('browser-sync').create(),
+    del             = require('del'),
     gulp            = require('gulp'),
     autoprefixer    = require('gulp-autoprefixer'),
     cleancss        = require('gulp-clean-css'),
@@ -9,6 +10,7 @@ var browsersync     = require('browser-sync').create(),
     imagemin        = require('gulp-imagemin'),
     csslint         = require('gulp-csslint'),
     jshint          = require('gulp-jshint'),
+    plumber         = require('gulp-plumber'),
     rename          = require('gulp-rename'),
     sass            = require('gulp-sass'),
     sourcemaps      = require('gulp-sourcemaps'),
@@ -131,6 +133,13 @@ var plugins = {
             reloadOnRestart: true,
             notify: false
         }
+    },
+    plumber: {
+        options: {
+            errorHandler: (error) => {
+                console.log(error.message);
+            }
+        }
     }
 };
 
@@ -152,6 +161,7 @@ gulp.task('html', () => {
     var $ = plugins.html;
 
     return gulp.src(getExtensions(paths.src.html, paths.src.root))
+        .pipe(plumber(plugins.plumber.options))
         .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.html.folder));
 });
 
@@ -163,6 +173,7 @@ gulp.task('style', () => {
     var $ = plugins.style;
 
     return gulp.src(getExtensions(paths.src.style, paths.src.root))
+        .pipe(plumber(plugins.plumber.options))
         .pipe($.run.sourcemaps && $.run.sass    ? sourcemaps.init($.sourcemaps.options)                                 : noop())
         .pipe($.run.sass                        ? sass($.sass.options).on('error', $.sass.onError)                      : noop())
         .pipe($.run.sass                        ? concat($.concat.name)                                                 : noop())
@@ -186,6 +197,7 @@ gulp.task('scripts', () => {
     var $ = plugins.scripts;
 
     return gulp.src(getExtensions(paths.src.scripts, paths.src.root))
+        .pipe(plumber(plugins.plumber.options))
         .pipe($.run.jshint                      ? jshint() : noop())
         .pipe($.run.jshint                      ? jshint.reporter($.jshint.reporter)                                    : noop())
         .pipe($.run.sourcemaps && $.run.uglify  ? sourcemaps.init($.sourcemaps.options)                                 : noop())
@@ -205,7 +217,10 @@ gulp.task('scripts', () => {
 gulp.task('images', () => {
     var $ = plugins.images;
 
-    return gulp.src(getExtensions(paths.src.images, paths.root))
+    del(getExtensions(paths.src.images, paths.src.root));
+
+    return gulp.src(getExtensions(paths.src.images, paths.src.root))
+        .pipe(plumber(plugins.plumber.options))
         .pipe($.run.imagemin                    ? imagemin($.imagemin.options)                                          : noop())
         .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.images.folder))
         .pipe(plugins.browsersync               ? browsersync.stream()                                                  : noop());
@@ -219,6 +234,7 @@ gulp.task('fonts', () => {
     var $ = plugins.fonts;
 
     return gulp.src(getExtensions(paths.src.fonts, paths.src.root))
+        .pipe(plumber(plugins.plumber.options))
         .pipe(gulp.dest(gulp.dest.root + '/' + paths.dest.fonts.folder))
         .pipe(plugins.browsersync               ? browsersync.stream()                                                  : noop());
 });
