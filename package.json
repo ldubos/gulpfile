@@ -47,6 +47,7 @@
     "gulp-uglify": "^2.1.2",
     "gulp-watch": "^4.3.11",
     "jshint": "^2.9.4",
-    "through2": "^2.0.3"
+    "through2": "^2.0.3",
+    "vinyl-paths": "^2.1.0"
   }
 }
