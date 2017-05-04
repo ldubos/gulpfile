@@ -4,6 +4,7 @@ var browsersync     = require('browser-sync').create(),
     del             = require('del'),
     gulp            = require('gulp'),
     autoprefixer    = require('gulp-autoprefixer'),
+    batch           = require('gulp-batch'),
     cleancss        = require('gulp-clean-css'),
     concat          = require('gulp-concat'),
     csscomb         = require('gulp-csscomb'),
@@ -14,7 +15,8 @@ var browsersync     = require('browser-sync').create(),
     rename          = require('gulp-rename'),
     sass            = require('gulp-sass'),
     sourcemaps      = require('gulp-sourcemaps'),
-    uglify          = require('gulp-uglify');
+    uglify          = require('gulp-uglify'),
+    watch           = require('gulp-watch');
 
 var noop            = () => { return require("through2").obj(); };
 
@@ -140,6 +142,10 @@ var plugins = {
                 console.log(error.message);
             }
         }
+    },
+    del: {
+        then: (paths) => {console.log('Deleted files and folders:\n', paths.join('\n')); },
+        catch: (error) => {console.log('Cannot be able to delete files and folders:\n', error); }
     }
 };
 
@@ -160,6 +166,10 @@ function getExtensions(path, root) {
 gulp.task('html', () => {
     var $ = plugins.html;
 
+    del(getExtensions(paths.dest.html, paths.dest.root))
+        .then(plugins.del.then)
+        .catch(plugins.del.catch);
+
     return gulp.src(getExtensions(paths.src.html, paths.src.root))
         .pipe(plumber(plugins.plumber.options))
         .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.html.folder));
@@ -171,6 +181,10 @@ gulp.task('html', () => {
 
 gulp.task('style', () => {
     var $ = plugins.style;
+
+    del(getExtensions(paths.dest.style, paths.dest.root))
+        .then(plugins.del.then)
+        .catch(plugins.del.catch);
 
     return gulp.src(getExtensions(paths.src.style, paths.src.root))
         .pipe(plumber(plugins.plumber.options))
@@ -196,6 +210,10 @@ gulp.task('style', () => {
 gulp.task('scripts', () => {
     var $ = plugins.scripts;
 
+    del(getExtensions(paths.dest.scripts, paths.dest.root))
+        .then(plugins.del.then)
+        .catch(plugins.del.catch);
+
     return gulp.src(getExtensions(paths.src.scripts, paths.src.root))
         .pipe(plumber(plugins.plumber.options))
         .pipe($.run.jshint                      ? jshint() : noop())
@@ -217,7 +235,9 @@ gulp.task('scripts', () => {
 gulp.task('images', () => {
     var $ = plugins.images;
 
-    del(getExtensions(paths.src.images, paths.src.root));
+    del(getExtensions(paths.dest.images, paths.dest.root))
+        .then(plugins.del.then)
+        .catch(plugins.del.catch);
 
     return gulp.src(getExtensions(paths.src.images, paths.src.root))
         .pipe(plumber(plugins.plumber.options))
@@ -233,9 +253,13 @@ gulp.task('images', () => {
 gulp.task('fonts', () => {
     var $ = plugins.fonts;
 
+    del(getExtensions(paths.dest.fonts, paths.dest.root))
+        .then(plugins.del.then)
+        .catch(plugins.del.catch);
+
     return gulp.src(getExtensions(paths.src.fonts, paths.src.root))
         .pipe(plumber(plugins.plumber.options))
-        .pipe(gulp.dest(gulp.dest.root + '/' + paths.dest.fonts.folder))
+        .pipe(gulp.dest(paths.dest.root + '/' + paths.dest.fonts.folder))
         .pipe(plugins.browsersync               ? browsersync.stream()                                                  : noop());
 });
 
@@ -256,10 +280,10 @@ gulp.task('serve', ['default'], () => {
 
     plugins.browsersync = true;
 
-    gulp.watch(getExtensions(paths.src.html,    paths.src.root), ['html']);
-    gulp.watch(getExtensions(paths.src.style,   paths.src.root), ['style']);
-    gulp.watch(getExtensions(paths.src.scripts, paths.src.root), ['scripts']);
-    gulp.watch(getExtensions(paths.src.images,  paths.src.root), ['images']);
-    gulp.watch(getExtensions(paths.src.fonts,   paths.src.root), ['fonts']);
+    watch(getExtensions(paths.src.html,    paths.src.root), batch((events, done) => {gulp.start('html', done)}));
+    watch(getExtensions(paths.src.style,   paths.src.root), batch((events, done) => {gulp.start('style', done)}));
+    watch(getExtensions(paths.src.scripts, paths.src.root), batch((events, done) => {gulp.start('scripts', done)}));
+    watch(getExtensions(paths.src.images,  paths.src.root), batch((events, done) => {gulp.start('images', done)}));
+    watch(getExtensions(paths.src.fonts,   paths.src.root), batch((events, done) => {gulp.start('fonts', done)}));
     gulp.watch(getExtensions(paths.dest.html,   paths.dest.root)).on('change', browsersync.reload);
 });

@@ -33,6 +33,7 @@
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^3.1.1",
+    "gulp-batch": "^1.0.5",
     "gulp-clean-css": "^3.0.4",
     "gulp-concat": "^2.6.1",
     "gulp-csscomb": "^3.0.8",
@@ -44,6 +45,7 @@
     "gulp-sass": "^3.1.0",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-uglify": "^2.1.2",
+    "gulp-watch": "^4.3.11",
     "jshint": "^2.9.4",
     "through2": "^2.0.3"
   }
